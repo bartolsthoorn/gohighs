@@ -1,5 +1,8 @@
 # gohighs
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/bartolsthoorn/gohighs/highs.svg)](https://pkg.go.dev/github.com/bartolsthoorn/gohighs/highs)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Go bindings for [HiGHS](https://highs.dev/), a high-performance solver for linear programming (LP), mixed-integer programming (MIP), and quadratic programming (QP) problems.
 
 ## Features
@@ -19,6 +22,18 @@ go get github.com/bartolsthoorn/gohighs/highs
 
 Pre-built libraries are included for all supported platforms (macOS and Linux, arm64 and amd64).
 
+Try the included example:
+
+```bash
+go run ./cmd/example
+```
+
+Run the tests:
+
+```bash
+go test ./highs/
+```
+
 ## Quick Start
 
 ### High-Level API
@@ -29,7 +44,6 @@ package main
 import (
     "fmt"
     "log"
-    "math"
 
     "github.com/bartolsthoorn/gohighs/highs"
 )
@@ -42,7 +56,7 @@ func main() {
         ColLower: []float64{0.0, 0.0},
         ColUpper: []float64{10.0, 10.0},
     }
-    model.AddDenseRow(1.0, []float64{1.0, 1.0}, math.Inf(1)) // x + y >= 1
+    model.AddGeRow([]float64{1.0, 1.0}, 1.0) // x + y >= 1
 
     solution, err := model.Solve(highs.WithOutput(false))
     if err != nil {
@@ -66,13 +80,25 @@ model := highs.Model{
     ColUpper: []float64{10.0, 10.0, 10.0},
     VarTypes: []highs.VariableType{highs.Integer, highs.Integer, highs.Continuous},
 }
-model.AddDenseRow(highs.NegInf(), []float64{1.0, 1.0, 1.0}, 10.0)
+model.AddLeRow([]float64{1.0, 1.0, 1.0}, 10.0) // x + y + z <= 10
 
 solution, err := model.Solve(
     highs.WithOutput(false),
     highs.WithTimeLimit(60),
     highs.WithMIPRelGap(0.01),
 )
+```
+
+### Constraint Helpers
+
+Convenience methods for common constraint types:
+
+```go
+model.AddGeRow([]float64{1.0, 1.0}, 5.0)                       // x + y >= 5
+model.AddLeRow([]float64{1.0, 1.0}, 10.0)                      // x + y <= 10
+model.AddEqRow([]float64{1.0, 1.0}, 7.0)                       // x + y  = 7
+model.AddDenseRow(1.0, []float64{1.0, 1.0}, 10.0)              // 1 <= x + y <= 10
+model.AddSparseRow(1.0, []int{0, 3}, []float64{1.0, 2.0}, 5.0) // 1 <= x0 + 2*x3 <= 5
 ```
 
 ### Quadratic Programming (QP)
@@ -122,6 +148,17 @@ solution, err := model.Solve(
 )
 ```
 
+Any [HiGHS option](https://ergo-code.github.io/HiGHS/dev/options/definitions/) can be set by name using the generic option functions:
+
+```go
+solution, err := model.Solve(
+    highs.WithBoolOption("output_flag", false),
+    highs.WithIntOption("highs_debug_level", 1),
+    highs.WithFloatOption("primal_feasibility_tolerance", 1e-8),
+    highs.WithStringOption("solver", "ipm"),
+)
+```
+
 ## Building HiGHS
 
 Pre-built libraries are included for all platforms. To rebuild or update HiGHS, use the build script:
@@ -167,6 +204,8 @@ The script will:
 gohighs/
 ├── go.mod
 ├── README.md
+├── cmd/
+│   └── example/main.go         # Runnable example (go run ./cmd/example)
 ├── scripts/
 │   └── build-highs.sh          # Build script for HiGHS
 ├── internal/
