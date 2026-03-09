@@ -8,15 +8,18 @@
 # Options:
 #   --platform <PLATFORM>   Target platform (auto-detected if not specified)
 #                           Supported: darwin_arm64, darwin_amd64, linux_amd64, linux_arm64
+#   --tag <TAG>             Git tag to clone (e.g. v1.13.1). Defaults to latest master.
 #   --docker                Use Docker to build (required for Linux from macOS)
 #   --all                   Build for all platforms (uses Docker for Linux)
 #   --help                  Show this help message
 #
 # Examples:
-#   ./scripts/build-highs.sh                              # Build for current platform
+#   ./scripts/build-highs.sh                              # Build for current platform (latest HiGHS)
+#   ./scripts/build-highs.sh --tag v1.13.1                # Build specific HiGHS version
 #   ./scripts/build-highs.sh --platform darwin_amd64      # Cross-compile for Intel Mac
 #   ./scripts/build-highs.sh --platform linux_amd64 --docker  # Build Linux via Docker
 #   ./scripts/build-highs.sh --all                        # Build all platforms
+#   ./scripts/build-highs.sh --all --tag v1.13.1          # Build all platforms with specific version
 #   ./scripts/build-highs.sh /path/to/HiGHS              # Use local HiGHS source
 #
 
@@ -28,6 +31,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 # Default values
 HIGHS_DIR=""
 TARGET_PLATFORM=""
+HIGHS_TAG=""
 USE_DOCKER=false
 BUILD_ALL=false
 
@@ -36,6 +40,10 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --platform)
             TARGET_PLATFORM="$2"
+            shift 2
+            ;;
+        --tag)
+            HIGHS_TAG="$2"
             shift 2
             ;;
         --docker)
@@ -47,7 +55,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help)
-            head -25 "$0" | tail -22
+            head -27 "$0" | tail -24
             exit 0
             ;;
         *)
@@ -83,8 +91,13 @@ detect_platform() {
 ensure_highs_source() {
     if [[ -z "$HIGHS_DIR" ]]; then
         HIGHS_DIR="$(mktemp -d)/HiGHS"
-        echo "Cloning HiGHS..."
-        git clone --depth 1 https://github.com/ERGO-Code/HiGHS.git "$HIGHS_DIR"
+        if [[ -n "$HIGHS_TAG" ]]; then
+            echo "Cloning HiGHS at tag $HIGHS_TAG..."
+            git clone --depth 1 --branch "$HIGHS_TAG" https://github.com/ERGO-Code/HiGHS.git "$HIGHS_DIR"
+        else
+            echo "Cloning HiGHS (latest master)..."
+            git clone --depth 1 https://github.com/ERGO-Code/HiGHS.git "$HIGHS_DIR"
+        fi
     fi
     
     if [[ ! -f "$HIGHS_DIR/CMakeLists.txt" ]]; then
