@@ -275,12 +275,18 @@ copy_headers() {
         mv "$PROJECT_DIR/internal/highs/lib/$platform/HConfig.h" "$include_dir/"
     fi
     
-    # Patch highs_c_api.h for cgo compatibility
+    # Patch highs_c_api.h for cgo compatibility.
+    # Convert `[static] const HighsInt kHighs... = N;` to `#define kHighs... ((HighsInt)N)`.
+    # CGO emits external symbol references for these constants; `static const` has
+    # internal linkage which causes "undefined reference" errors when linking against
+    # the static library on Linux (gnu ld). macOS/clang silently inlines them, which
+    # is why the issue only surfaces on Linux.
     echo "Patching highs_c_api.h for cgo compatibility..."
+    local patch_expr='s|^(static )?const HighsInt (k[A-Za-z][A-Za-z0-9]*)[[:space:]]*=[[:space:]]*(-?[0-9]+);(.*)$|#define \2 ((HighsInt)\3)\4|'
     if [[ "$(uname)" == "Darwin" ]]; then
-        sed -i '' 's/^const HighsInt kHighsIis/static const HighsInt kHighsIis/g' "$include_dir/highs_c_api.h"
+        sed -i '' -E "$patch_expr" "$include_dir/highs_c_api.h"
     else
-        sed -i 's/^const HighsInt kHighsIis/static const HighsInt kHighsIis/g' "$include_dir/highs_c_api.h"
+        sed -i -E "$patch_expr" "$include_dir/highs_c_api.h"
     fi
 }
 
