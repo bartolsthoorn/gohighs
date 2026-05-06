@@ -6,7 +6,7 @@
 # Run:
 #   docker run --rm gohighs-test
 
-FROM golang:1.25.5-trixie AS builder
+FROM golang:1.26.2-trixie AS builder
 
 # Install build dependencies for CGO
 RUN apt-get update && apt-get install -y \
@@ -27,7 +27,7 @@ WORKDIR /app
 RUN cat > go.mod << 'EOF'
 module testapp
 
-go 1.25.5
+go 1.26.2
 
 require github.com/bartolsthoorn/gohighs v0.0.0
 
