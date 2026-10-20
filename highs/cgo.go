@@ -903,3 +903,48 @@ func (s *Solver) WriteSolution(filename string, pretty bool) error {
 	return newError("WriteSolution", Status(status))
 }
 
+// GetColByName returns the index of the column with the given name.
+// It returns an error if no column, or more than one column, has that name.
+func (s *Solver) GetColByName(name string) (int, error) {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	var colIndex C.HighsInt
+	status := Status(C.Highs_getColByName(s.ptr, cName, &colIndex))
+	if err := newError("GetColByName", status); err != nil {
+		return 0, err
+	}
+	return int(colIndex), nil
+}
+
+// GetRowByName returns the index of the row with the given name.
+// It returns an error if no row, or more than one row, has that name.
+func (s *Solver) GetRowByName(name string) (int, error) {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	var rowIndex C.HighsInt
+	status := Status(C.Highs_getRowByName(s.ptr, cName, &rowIndex))
+	if err := newError("GetRowByName", status); err != nil {
+		return 0, err
+	}
+	return int(rowIndex), nil
+}
+
+// SetColName sets the name of the column at the given index.
+func (s *Solver) SetColName(col int, name string) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	status := Status(C.Highs_passColName(s.ptr, C.HighsInt(col), cName))
+	return newError("SetColName", status)
+}
+
+// SetRowName sets the name of the row at the given index.
+func (s *Solver) SetRowName(row int, name string) error {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	status := Status(C.Highs_passRowName(s.ptr, C.HighsInt(row), cName))
+	return newError("SetRowName", status)
+}

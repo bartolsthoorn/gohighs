@@ -135,6 +135,18 @@ solver.AddRow(5.0, math.Inf(1), []int{0, 1}, []float64{1.0, 1.0})
 solution, err := solver.Run()
 ```
 
+Columns and rows can be named and looked up by name, which is handy for models read from a file:
+
+```go
+solver.SetColName(0, "x")
+solver.SetRowName(0, "demand")
+
+col, err := solver.GetColByName("x")      // 0
+row, err := solver.GetRowByName("demand") // 0
+```
+
+`GetColByName` and `GetRowByName` return an error if the name is unknown or ambiguous.
+
 ## Solve Options
 
 ```go

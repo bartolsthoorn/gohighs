@@ -2,6 +2,7 @@ package highs
 
 import (
 	"math"
+	"strings"
 	"testing"
 )
 
@@ -341,6 +342,124 @@ func TestSolverInfinity(t *testing.T) {
 	inf := solver.Infinity()
 	if inf <= 0 || math.IsNaN(inf) {
 		t.Errorf("Invalid infinity value: %f", inf)
+	}
+}
+
+func TestColByName(t *testing.T) {
+	solver, err := NewSolver()
+	if err != nil {
+		t.Fatalf("NewSolver failed: %v", err)
+	}
+
+	if err := solver.AddVars([]float64{0.0, 0.0}, []float64{1.0, 2.0}); err != nil {
+		t.Fatalf("AddVars failed: %v", err)
+	}
+
+	if err := solver.SetColName(1, "my-var"); err != nil {
+		t.Fatalf("SetColName failed: %v", err)
+	}
+
+	idx, err := solver.GetColByName("my-var")
+	if err != nil {
+		t.Fatalf("GetColByName failed: %v", err)
+	}
+
+	if idx != 1 {
+		t.Fatalf("Expected 1 got %d", idx)
+	}
+
+	_, err = solver.GetColByName("non-existent-variable")
+	if err == nil {
+		t.Fatal("Expected error")
+	}
+	if !strings.Contains(err.Error(), "GetColByName") {
+		t.Fatalf("Expected '%s' to contain 'GetColByName'", err.Error())
+	}
+
+	// An ambiguous name must not resolve to an arbitrary column.
+	if err := solver.SetColName(0, "my-var"); err != nil {
+		t.Fatalf("SetColName failed: %v", err)
+	}
+	if _, err := solver.GetColByName("my-var"); err == nil {
+		t.Fatal("Expected error for duplicated column name")
+	}
+}
+
+func TestSetColNameErrorOnNonExistentVariable(t *testing.T) {
+	solver, err := NewSolver()
+	if err != nil {
+		t.Fatalf("NewSolver failed: %v", err)
+	}
+	err = solver.SetColName(10, "my-var")
+	if err == nil {
+		t.Fatal("Expected error when index out of bounds")
+	}
+
+	if !strings.Contains(err.Error(), "SetColName") {
+		t.Fatalf("Expected '%s' to contain 'SetColName'", err.Error())
+	}
+}
+
+func TestRowByName(t *testing.T) {
+	solver, err := NewSolver()
+	if err != nil {
+		t.Fatalf("NewSolver failed: %v", err)
+	}
+
+	if err := solver.AddVars([]float64{0.0, 0.0}, []float64{1.0, 2.0}); err != nil {
+		t.Fatalf("AddVars failed: %v", err)
+	}
+
+	if err := solver.AddRow(0.0, 10.0, []int{0, 1}, []float64{1.0, 0.0}); err != nil {
+		t.Fatalf("AddRow failed: %v", err)
+	}
+
+	if err := solver.AddRow(0.0, 10.0, []int{1}, []float64{1.0}); err != nil {
+		t.Fatalf("AddRow failed: %v", err)
+	}
+
+	if err := solver.SetRowName(0, "my-row"); err != nil {
+		t.Fatalf("SetRowName failed: %v", err)
+	}
+
+	idx, err := solver.GetRowByName("my-row")
+	if err != nil {
+		t.Fatalf("GetRowByName failed: %v", err)
+	}
+
+	if idx != 0 {
+		t.Fatalf("Expected 0 got %d", idx)
+	}
+
+	_, err = solver.GetRowByName("non-existent-row")
+	if err == nil {
+		t.Fatal("Expected error")
+	}
+	if !strings.Contains(err.Error(), "GetRowByName") {
+		t.Fatalf("Expected '%s' to contain 'GetRowByName'", err.Error())
+	}
+
+	// An ambiguous name must not resolve to an arbitrary row.
+	if err := solver.SetRowName(1, "my-row"); err != nil {
+		t.Fatalf("SetRowName failed: %v", err)
+	}
+	if _, err := solver.GetRowByName("my-row"); err == nil {
+		t.Fatal("Expected error for duplicated row name")
+	}
+}
+
+func TestSetRowNameErrorOnNonExistentRow(t *testing.T) {
+	solver, err := NewSolver()
+	if err != nil {
+		t.Fatalf("NewSolver failed: %v", err)
+	}
+	err = solver.SetRowName(10, "my-row")
+	if err == nil {
+		t.Fatal("Expected error when index out of bounds")
+	}
+
+	if !strings.Contains(err.Error(), "SetRowName") {
+		t.Fatalf("Expected '%s' to contain 'SetRowName'", err.Error())
 	}
 }
 
