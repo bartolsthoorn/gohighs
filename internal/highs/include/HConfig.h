@@ -10,7 +10,7 @@
 #define CMAKE_BUILD_TYPE "Release"
 /* #undef HIGHSINT64 */
 /* #undef HIGHS_NO_DEFAULT_THREADS */
-#define HIGHS_HAVE_MM_PAUSE
+/* #undef HIGHS_HAVE_MM_PAUSE */
 #define HIGHS_HAVE_BUILTIN_CLZ
 /* #undef HIGHS_HAVE_BITSCAN_REVERSE */
 
