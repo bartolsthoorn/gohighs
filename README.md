@@ -244,7 +244,7 @@ gohighs/
 
 ## HiGHS Version
 
-This package is built against **HiGHS v1.13.1**.
+This package is built against **HiGHS v1.15.1**.
 
 ## Acknowledgments
 
