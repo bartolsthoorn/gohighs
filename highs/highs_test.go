@@ -463,6 +463,54 @@ func TestSetRowNameErrorOnNonExistentRow(t *testing.T) {
 	}
 }
 
+func TestGetName(t *testing.T) {
+	solver, err := NewSolver()
+	if err != nil {
+		t.Fatalf("NewSolver failed: %v", err)
+	}
+	if err := solver.AddVars([]float64{0.0, 0.0}, []float64{1.0, 2.0}); err != nil {
+		t.Fatalf("AddVars failed: %v", err)
+	}
+	if err := solver.AddRow(0.0, 10.0, []int{0, 1}, []float64{1.0, 0.0}); err != nil {
+		t.Fatalf("AddRow failed: %v", err)
+	}
+	if err := solver.SetColName(1, "my-var"); err != nil {
+		t.Fatalf("Set col name: %v", err)
+	}
+	if err := solver.SetRowName(0, "my-row"); err != nil {
+		t.Fatalf("Set row name: %v", err)
+	}
+
+	tests := []struct {
+		fn    string
+		get   func(int) (string, error)
+		index int
+		want  string
+	}{
+		{"Col", solver.GetColName, 1, "my-var"},
+		{"Row", solver.GetRowName, 0, "my-row"},
+	}
+	for _, test := range tests {
+		t.Run(test.fn, func(t *testing.T) {
+			got, err := test.get(test.index)
+			if err != nil {
+				t.Fatalf("get: %v", err)
+			}
+			if got != test.want {
+				t.Fatalf("Expected '%s' got '%s'", test.want, got)
+			}
+
+			_, err = test.get(10)
+			if err == nil {
+				t.Fatalf("Expect error on index out of bounds")
+			}
+			if !strings.Contains(err.Error(), "Get"+test.fn+"Name") {
+				t.Fatalf("Expected '%s' to contain 'Get%sName'", err.Error(), test.fn)
+			}
+		})
+	}
+}
+
 // Benchmarks
 
 func BenchmarkLPSolve(b *testing.B) {
