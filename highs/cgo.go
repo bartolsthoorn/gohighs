@@ -917,6 +917,26 @@ func (s *Solver) GetColByName(name string) (int, error) {
 	return int(colIndex), nil
 }
 
+// GetColName returns the name of a column given its index
+func (s *Solver) GetColName(index int) (string, error) {
+	buf := make([]byte, C.kHighsMaximumStringLength)
+	status := Status(C.Highs_getColName(s.ptr, C.HighsInt(index), (*C.char)(unsafe.Pointer(&buf[0]))))
+	if err := newError("GetColName", status); err != nil {
+		return "", err
+	}
+	return C.GoString((*C.char)(unsafe.Pointer(&buf[0]))), nil
+}
+
+// GetRowName returns the name of a row given its index
+func (s *Solver) GetRowName(index int) (string, error) {
+	buf := make([]byte, C.kHighsMaximumStringLength)
+	status := Status(C.Highs_getRowName(s.ptr, C.HighsInt(index), (*C.char)(unsafe.Pointer(&buf[0]))))
+	if err := newError("GetRowName", status); err != nil {
+		return "", err
+	}
+	return C.GoString((*C.char)(unsafe.Pointer(&buf[0]))), nil
+}
+
 // GetRowByName returns the index of the row with the given name.
 // It returns an error if no row, or more than one row, has that name.
 func (s *Solver) GetRowByName(name string) (int, error) {

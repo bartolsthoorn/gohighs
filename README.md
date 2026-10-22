@@ -141,6 +141,9 @@ Columns and rows can be named and looked up by name, which is handy for models r
 solver.SetColName(0, "x")
 solver.SetRowName(0, "demand")
 
+colName, err := solver.GetColName(0) // "x"
+rowName, err := solver.GetRowName(0) // "demand"
+
 col, err := solver.GetColByName("x")      // 0
 row, err := solver.GetRowByName("demand") // 0
 ```
